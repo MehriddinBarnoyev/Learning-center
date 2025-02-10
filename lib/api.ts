@@ -7,7 +7,6 @@ export interface User {
   name: string
   email: string
   createdAt: string
-  "test-results": TestResult[]
 }
 
 export interface TestResult {
@@ -62,13 +61,42 @@ export async function saveTestResult(
   }
 }
 
-export async function getUserResults(userId: string): Promise<TestResult[]> {
+export async function getUserResults(userId: string): Promise<{ user: User; results: TestResult[] }> {
   try {
     const response = await axios.get<User>(`${API_URL}/tested-users/${userId}`)
-    return response.data["test-results"] || []
+    const user = response.data
+    return {
+      user: {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        createdAt: user.createdAt,
+      },
+      results: user["test-results"] || [],
+    }
   } catch (error) {
     console.error("Error fetching user results:", error)
     throw new Error("Failed to fetch test results. Please try again.")
   }
+}
+
+export async function getStudents(): Promise<User[]> {
+  const response = await axios.get<User[]>(`${API_URL}/tested-users`)
+  return response.data
+}
+
+export async function getQuestions(): Promise<any[]> {
+  const response = await axios.get<any[]>(`${API_URL}/questions`)
+  return response.data
+}
+
+export async function addQuestion(questionData: {
+  subject: string
+  question: string
+  options: string[]
+  correct: string
+}): Promise<any> {
+  const response = await axios.post(`${API_URL}/questions`, questionData)
+  return response.data
 }
 

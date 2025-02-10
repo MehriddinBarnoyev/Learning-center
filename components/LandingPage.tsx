@@ -6,33 +6,6 @@ import Header from "./Header";
 import Footer from "./Footer";
 import { Search } from "lucide-react";
 
-const partners = [
-  {
-    name: "Amazon",
-    logo: "https://m.media-amazon.com/images/G/01/gc/designs/livepreview/amzlogo_noto_email_v2016_us-main._CB616929789_.png",
-  },
-  {
-    name: "Course Hero",
-    logo: "https://mma.prnewswire.com/media/478224/Course_Hero_Logo.jpg?p=twitter",
-  },
-  {
-    name: "Google",
-    logo: "https://upload.wikimedia.org/wikipedia/commons/2/2f/Google_2015_logo.svg",
-  },
-  {
-    name: "Khan Academy",
-    logo: "https://miro.medium.com/v2/resize:fit:1400/0*Le7FxLZNPIthsVp2.jpeg",
-  },
-  {
-    name: "Udemy",
-    logo: "https://whop.com/blog/content/images/size/w600/2024/05/What-is-Udemy-Pros--Cons--and-Features-2024-Review.webp",
-  },
-  {
-    name: "Microsoft",
-    logo: "https://upload.wikimedia.org/wikipedia/commons/4/44/Microsoft_logo.svg",
-  },
-];
-
 export default function LandingPage() {
   return (
     <div className="flex min-h-screen flex-col">
@@ -85,30 +58,10 @@ export default function LandingPage() {
           </div>
         </section>
 
-        {/* Partners Section */}
-        <section className="border-y bg-muted/50 py-12">
-          <div className="container mx-auto px-4 md:px-6">
-            <div className="grid grid-cols-2 gap-8 md:grid-cols-6">
-              {partners.map((partner) => (
-                <div
-                  key={partner.name}
-                  className="flex items-center justify-center"
-                >
-                  <Image
-                    src={partner.logo || "/placeholder.svg"}
-                    alt={partner.name}
-                    width={100}
-                    height={30}
-                    className="grayscale transition-all hover:grayscale-0"
-                  />
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
+      
 
         {/* Stats Section */}
-        <section className="py-20">
+        {/* <section className="py-20">
           <div className="container mx-auto px-4 md:px-6">
             <div className="grid gap-12 lg:grid-cols-2">
               <div className="flex flex-col justify-center space-y-4">
@@ -159,7 +112,7 @@ export default function LandingPage() {
               </div>
             </div>
           </div>
-        </section>
+        </section> */}
       </main>
       <Footer />
     </div>
