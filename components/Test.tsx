@@ -182,12 +182,24 @@ export default function Test() {
     }
   }
 
-  if (!settings) return null
+  if (!settings) {
+    return (
+      <div className="flex min-h-screen flex-col">
+        <Header />
+        <main className="flex-grow container py-8">
+          <div className="flex items-center justify-center h-[400px]">
+            <p className="text-muted-foreground">Loading test...</p>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    )
+  }
 
   const progress = questions.length > 0 ? (Object.keys(answers).length / questions.length) * 100 : 0
 
   return (
-    <div className="flex min-h-screen flex-col ml-10">
+    <div className="flex min-h-screen flex-col">
       <Header />
       <main className="flex-grow container py-8">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-8">

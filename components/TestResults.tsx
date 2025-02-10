@@ -48,8 +48,8 @@ export default function TestResults() {
       <div className="flex min-h-screen flex-col">
         <Header />
         <main className="flex-grow container py-8">
-          <div className="flex items-center justify-center">
-            <p>Loading results...</p>
+          <div className="flex items-center justify-center h-[400px]">
+            <p className="text-muted-foreground">Loading results...</p>
           </div>
         </main>
         <Footer />
