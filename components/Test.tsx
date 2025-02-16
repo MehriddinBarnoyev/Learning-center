@@ -21,158 +21,67 @@ import {
 } from "@/components/ui/alert-dialog"
 import Header from "./Header"
 import Footer from "./Footer"
-import { saveTestResult } from "@/lib/api"
-
-const defaultQuestions = {
-  math: [
-    {
-      id: 1,
-      question: "What is 2 + 2?",
-      options: ["3", "4", "5", "6"],
-      correct: "4",
-    },
-    {
-      id: 2,
-      question: "What is 10 * 5?",
-      options: ["40", "45", "50", "55"],
-      correct: "50",
-    },
-    {
-      id: 3,
-      question: "What is the square root of 64?",
-      options: ["6", "7", "8", "9"],
-      correct: "8",
-    },
-    {
-      id: 4,
-      question: "What is 1/4 + 1/2?",
-      options: ["1/6", "2/6", "3/4", "5/4"],
-      correct: "3/4",
-    },
-    {
-      id: 5,
-      question: "What is the value of π (pi) to two decimal places?",
-      options: ["3.14", "3.16", "3.18", "3.20"],
-      correct: "3.14",
-    },
-  ],
-  science: [
-    {
-      id: 1,
-      question: "What is the chemical symbol for water?",
-      options: ["H2O", "CO2", "NaCl", "O2"],
-      correct: "H2O",
-    },
-    {
-      id: 2,
-      question: "Which planet is known as the Red Planet?",
-      options: ["Mars", "Venus", "Jupiter", "Saturn"],
-      correct: "Mars",
-    },
-    {
-      id: 3,
-      question: "What is the largest organ in the human body?",
-      options: ["Heart", "Brain", "Liver", "Skin"],
-      correct: "Skin",
-    },
-    {
-      id: 4,
-      question: "What is the process by which plants make their own food?",
-      options: ["Photosynthesis", "Respiration", "Fermentation", "Digestion"],
-      correct: "Photosynthesis",
-    },
-    {
-      id: 5,
-      question: "What is the smallest unit of matter?",
-      options: ["Atom", "Molecule", "Cell", "Particle"],
-      correct: "Atom",
-    },
-  ],
-  history: [
-    {
-      id: 1,
-      question: "Who was the first President of the United States?",
-      options: ["John Adams", "Thomas Jefferson", "George Washington", "Benjamin Franklin"],
-      correct: "George Washington",
-    },
-    {
-      id: 2,
-      question: "In which year did World War II end?",
-      options: ["1943", "1944", "1945", "1946"],
-      correct: "1945",
-    },
-    {
-      id: 3,
-      question: "Who wrote the Declaration of Independence?",
-      options: ["George Washington", "Thomas Jefferson", "Benjamin Franklin", "John Adams"],
-      correct: "Thomas Jefferson",
-    },
-    {
-      id: 4,
-      question: "What ancient wonder was located in Alexandria, Egypt?",
-      options: ["The Hanging Gardens", "The Colossus of Rhodes", "The Lighthouse", "The Great Pyramid"],
-      correct: "The Lighthouse",
-    },
-    {
-      id: 5,
-      question: "Who was the first woman to fly solo across the Atlantic Ocean?",
-      options: ["Amelia Earhart", "Bessie Coleman", "Harriet Quimby", "Jacqueline Cochran"],
-      correct: "Amelia Earhart",
-    },
-  ],
-}
+import { getQuestions, saveTestResult, type Question } from "@/lib/api"
 
 export default function Test() {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const [settings, setSettings] = useState(null)
-  const [userId, setUserId] = useState(null)
+  const [questions, setQuestions] = useState<Question[]>([])
   const [currentQuestion, setCurrentQuestion] = useState(0)
-  const [answers, setAnswers] = useState({})
-  const [timeRemaining, setTimeRemaining] = useState(0)
+  const [answers, setAnswers] = useState<Record<number, string>>({})
+  const [timeRemaining, setTimeRemaining] = useState(1800) // 30 minutes by default
   const [showConfirmEnd, setShowConfirmEnd] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   useEffect(() => {
-    const settingsData = JSON.parse(decodeURIComponent(searchParams.get("settings") || "{}"))
-    const userIdData = searchParams.get("userId")
-    setSettings(settingsData)
-    setUserId(userIdData)
-    setTimeRemaining(settingsData.duration * 60)
-  }, [searchParams])
+    const subjectId = searchParams.get("subjectId")
+    const difficulty = searchParams.get("difficulty")
+
+    if (subjectId && difficulty) {
+      const fetchQuestions = async () => {
+        try {
+          const fetchedQuestions = await getQuestions(Number.parseInt(subjectId), difficulty)
+          setQuestions(fetchedQuestions)
+        } catch (error) {
+          console.error("Error fetching questions:", error)
+          alert("There was an error loading the test questions. Please try again.")
+        }
+      }
+      fetchQuestions()
+    } else {
+      alert("Invalid test parameters. Please go back and try again.")
+      router.push("/test-settings")
+    }
+  }, [searchParams, router])
 
   useEffect(() => {
-    if (timeRemaining > 0 && settings) {
+    if (timeRemaining > 0) {
       const timer = setInterval(() => setTimeRemaining((prev) => prev - 1), 1000)
       return () => clearInterval(timer)
-    } else if (timeRemaining === 0 && settings) {
+    } else if (timeRemaining === 0) {
       handleFinishTest()
     }
-  }, [timeRemaining, settings])
+  }, [timeRemaining])
 
-  const questions = settings ? defaultQuestions[settings.subject].slice(0, settings.questionsCount) : []
-
-  const handleAnswer = (answer) => {
+  const handleAnswer = (answer: string) => {
     setAnswers((prev) => ({ ...prev, [questions[currentQuestion].id]: answer }))
   }
 
   const handleFinishTest = async () => {
     setIsSubmitting(true)
     try {
-      const correctAnswers = questions.filter((q) => answers[q.id] === q.correct).length
-
+      const correctAnswers = questions.filter((q) => answers[q.id] === q.correct_option).length
       const testResult = {
-        userId,
-        subject: settings.subject,
-        difficulty: settings.difficulty,
+        student_id: Number.parseInt(searchParams.get("userId") || "0"),
+        subject_id: Number.parseInt(searchParams.get("subjectId") || "0"),
         score: (correctAnswers / questions.length) * 100,
-        timeSpent: settings.duration * 60 - timeRemaining,
-        correctAnswers,
-        totalQuestions: questions.length,
+        time_spent: 1800 - timeRemaining,
+        correct_answers: correctAnswers,
+        total_questions: questions.length,
       }
 
-      const savedResult = await saveTestResult(userId, testResult)
-      router.push(`/results?data=${encodeURIComponent(JSON.stringify(savedResult))}&userId=${userId}`)
+      const savedResult = await saveTestResult(testResult)
+      router.push(`/results?resultId=${savedResult.id}`)
     } catch (error) {
       console.error("Error saving test result:", error)
       alert("There was an error saving your test result. Please try again.")
@@ -182,7 +91,7 @@ export default function Test() {
     }
   }
 
-  if (!settings) {
+  if (questions.length === 0) {
     return (
       <div className="flex min-h-screen flex-col">
         <Header />
@@ -196,7 +105,7 @@ export default function Test() {
     )
   }
 
-  const progress = questions.length > 0 ? (Object.keys(answers).length / questions.length) * 100 : 0
+  const progress = (Object.keys(answers).length / questions.length) * 100
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -242,11 +151,10 @@ export default function Test() {
               {/* Test Header */}
               <div className="flex flex-col md:flex-row justify-between gap-4">
                 <div>
-                  <h1 className="text-3xl font-bold mb-2">
-                    {settings.subject.charAt(0).toUpperCase() + settings.subject.slice(1)} Test
-                  </h1>
+                  <h1 className="text-3xl font-bold mb-2">Test</h1>
                   <p className="text-muted-foreground">
-                    {settings.difficulty.charAt(0).toUpperCase() + settings.difficulty.slice(1)} Level
+                    {searchParams.get("difficulty")?.charAt(0).toUpperCase() + searchParams.get("difficulty")?.slice(1)}{" "}
+                    Level
                   </p>
                 </div>
                 <div className="flex items-center gap-4">

@@ -10,11 +10,7 @@ export default function ResultsPage() {
           <main className="flex-grow container py-8">
             <div className="space-y-8">
               <div className="h-[200px] bg-muted rounded-lg" /> {/* Results card skeleton */}
-              <div className="grid gap-4 md:grid-cols-2">
-                {[1, 2, 3, 4].map((i) => (
-                  <div key={i} className="h-[150px] bg-muted rounded-lg" /> /* History cards skeleton */
-                ))}
-              </div>
+              <div className="h-[150px] bg-muted rounded-lg" /> {/* Analysis card skeleton */}
             </div>
           </main>
           <div className="h-16 border-t" /> {/* Footer skeleton */}

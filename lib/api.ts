@@ -1,102 +1,87 @@
 import axios from "axios"
 
-const API_URL = "https://67a7304e203008941f66de89.mockapi.io"
+const API_URL = "http://localhost:4506"
 
 export interface User {
-  id: string
-  name: string
+  id: number
+  full_name: string
   email: string
-  createdAt: string
 }
 
 export interface TestResult {
-  id: string
-  userId: string
-  subject: string
-  difficulty: string
+  id: number
+  student_id: number
+  subject_id: number
   score: number
-  timeSpent: number
-  correctAnswers: number
-  totalQuestions: number
-  createdAt: string
+  time_spent: number
+  correct_answers: number
+  total_questions: number
+  created_at: string
 }
 
-export async function registerUser(name: string, email: string): Promise<User> {
-  const response = await axios.post<User>(`${API_URL}/tested-users`, {
-    name,
-    email,
-    "test-results": [],
-  })
+export interface Test {
+  id: string
+  subject: string
+  difficulty: string
+}
+
+export interface Question {
+  id: number
+  subject_id: number
+  question: string
+  options: string[]
+  correct_option: string
+  created_at: string
+  created_by: number
+}
+
+export interface Subject {
+  id: number
+  name: string
+}
+
+export async function registerUser(full_name: string, email: string): Promise<User> {
+  const response = await axios.post<User>(`${API_URL}/students`, { full_name, email })
   return response.data
 }
 
-export async function saveTestResult(
-  userId: string,
-  result: Omit<TestResult, "id" | "createdAt">,
-): Promise<TestResult> {
-  try {
-    // First, get the current user data
-    const userResponse = await axios.get<User>(`${API_URL}/tested-users/${userId}`)
-    const user = userResponse.data
-
-    // Create the new test result
-    const testResult = {
-      ...result,
-      createdAt: new Date().toISOString(),
-    }
-
-    // Update the user's test results
-    const updatedTestResults = [...user["test-results"], testResult]
-
-    // Update the user with the new test results
-    await axios.put(`${API_URL}/tested-users/${userId}`, {
-      ...user,
-      "test-results": updatedTestResults,
-    })
-
-    return testResult
-  } catch (error) {
-    console.error("Error saving test result:", error)
-    throw new Error("Failed to save test result. Please try again.")
-  }
+export async function getTests(): Promise<Test[]> {
+  const response = await axios.get<Test[]>(`${API_URL}/tests`)
+  return response.data
 }
 
-export async function getUserResults(userId: string): Promise<{ user: User; results: TestResult[] }> {
-  try {
-    const response = await axios.get<User>(`${API_URL}/tested-users/${userId}`)
-    const user = response.data
-    return {
-      user: {
-        id: user.id,
-        name: user.name,
-        email: user.email,
-        createdAt: user.createdAt,
-      },
-      results: user["test-results"] || [],
-    }
-  } catch (error) {
-    console.error("Error fetching user results:", error)
-    throw new Error("Failed to fetch test results. Please try again.")
-  }
+export async function getTest(id: string): Promise<Test> {
+  const response = await axios.get<Test>(`${API_URL}/test/${id}`)
+  return response.data
+}
+
+export async function getQuestions(subjectId: number, difficulty: string): Promise<Question[]> {
+  const response = await axios.get<Question[]>(`${API_URL}/subjects/${subjectId}/${difficulty}`)
+  return response.data
 }
 
 export async function getStudents(): Promise<User[]> {
-  const response = await axios.get<User[]>(`${API_URL}/tested-users`)
+  const response = await axios.get<User[]>(`${API_URL}/students`)
   return response.data
 }
 
-export async function getQuestions(): Promise<any[]> {
-  const response = await axios.get<any[]>(`${API_URL}/questions`)
+export async function saveTestResult(result: Omit<TestResult, "id" | "created_at">): Promise<TestResult> {
+  const response = await axios.post<TestResult>(`${API_URL}/results`, result)
   return response.data
 }
 
-export async function addQuestion(questionData: {
-  subject: string
-  question: string
-  options: string[]
-  correct: string
-}): Promise<any> {
-  const response = await axios.post(`${API_URL}/questions`, questionData)
+export async function getResults(): Promise<TestResult[]> {
+  const response = await axios.get<TestResult[]>(`${API_URL}/results`)
   return response.data
+}
+
+export async function getSubjects(): Promise<Subject[]> {
+  const response = await axios.get<Subject[]>(`${API_URL}/subjects`)
+  return response.data
+}
+
+export async function getSubject(id: number): Promise<Subject> {
+  const response = await axios.get<Subject[]>(`${API_URL}/subjects/${id}`)
+  return response.data[0]
 }
 
